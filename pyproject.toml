@@ -1,0 +1,12 @@
+[project]
+name = "ai-voice-assistant"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "livekit-agents>=1.1.5",
+    "livekit-plugins-openai>=1.1.5",
+    "livekit-plugins-silero>=1.1.5",
+    "python-dotenv>=1.1.1",
+]
