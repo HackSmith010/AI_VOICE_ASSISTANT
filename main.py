@@ -1,39 +1,23 @@
-import asyncio
+from flask import Flask, render_template, request, send_file
+from gtts import gTTS
 import os
-from dotenv import load_dotenv
-from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, AgentSession, llm
-from livekit.plugins import openai, silero
+import uuid
 
-load_dotenv()
+app = Flask(__name__)
 
-async def entrypoint(ctx: JobContext):
-    await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        text = request.form["text"]
+        lang = request.form.get("lang", "en")
 
-    chat_ctx = llm.ChatContent().append(
-        role="system",
-        text=(
-            "You are a voice assistant created by LiveKit. Your interface with users will be voice-based. "
-            "Use short and concise responses, and avoid unpronounceable punctuation."
-        ),
-    )
+        filename = f"tts_{uuid.uuid4().hex}.mp3"
+        tts = gTTS(text=text, lang=lang)
+        tts.save(filename)
 
-    my_llm = openai.LLM.with_ollama(
-        model="llama3.1:latest",
-        base_url="http://localhost:11434/v1",
-        chat_ctx=chat_ctx,  
-    )
+        return send_file(filename, as_attachment=False)
 
-    session = AgentSession(
-        vad=silero.VAD.load(),
-        stt=openai.STT(api_key=os.getenv("OPENAI_API_KEY")),
-        llm=my_llm,
-        tts=openai.TTS(api_key=os.getenv("OPENAI_API_KEY")),
-    )
-
-    session.start(ctx.room)
-
-    await asyncio.sleep(1)
-    await session.say("Hey, how can I help you today!", allow_interruptions=True)
+    return render_template("index.html")
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    app.run(debug=True)
