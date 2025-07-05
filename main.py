@@ -4,7 +4,7 @@ import asyncio
 import io
 
 app = Flask(__name__)
-VOICE = "en-US-GuyNeural"  # You can change to any voice supported by edge-tts
+VOICE = "en-US-GuyNeural"  
 
 @app.route("/")
 def index():
