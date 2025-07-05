@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "edge-tts>=7.0.2",
     "flask>=3.1.1",
     "gtts>=2.5.4",
     "pyttsx3>=2.98",

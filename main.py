@@ -1,23 +1,29 @@
-from flask import Flask, render_template, request, send_file
-from gtts import gTTS
-import os
-import uuid
+from flask import Flask, render_template, request, Response
+import edge_tts
+import asyncio
+import io
 
 app = Flask(__name__)
+VOICE = "en-US-GuyNeural"  # You can change to any voice supported by edge-tts
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
-    if request.method == "POST":
-        text = request.form["text"]
-        lang = request.form.get("lang", "en")
-
-        filename = f"tts_{uuid.uuid4().hex}.mp3"
-        tts = gTTS(text=text, lang=lang)
-        tts.save(filename)
-
-        return send_file(filename, as_attachment=False)
-
     return render_template("index.html")
+
+@app.route("/speak", methods=["POST"])
+def speak():
+    text = request.form.get("text")
+    audio_bytes = asyncio.run(text_to_speech(text))
+    return Response(audio_bytes, mimetype="audio/mpeg")
+
+async def text_to_speech(text):
+    stream = io.BytesIO()
+    communicate = edge_tts.Communicate(text, VOICE)
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            stream.write(chunk["data"])
+    stream.seek(0)
+    return stream.read()
 
 if __name__ == "__main__":
     app.run(debug=True)
